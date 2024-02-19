@@ -19,15 +19,18 @@ return &UserService{serverDb: db}
 
 func (s UserService) CreateUser(userPayload models.UserPayload) (models.UserPayload, error) {
 	//check db if user already exists
+var count int
+	err := s.serverDb.Db.QueryRow("SELECT * from users where email = $1", userPayload.Email).Scan(&count)
 
-	row := s.serverDb.Db.QueryRow("SELECT user where user_email = $1", userPayload.Email)
-
-	if row != nil {
-		return models.UserPayload{}, errors.New(("User already exists"))
+	if err != nil {
+		fmt.Println(err)
+		return models.UserPayload{}, errors.New("An error occurred while checking user existence")
 	}
-
+if count > 0 {
+	return models.UserPayload{}, errors.New("User already exists")
+}
 	
-	result, err := s.serverDb.Db.Exec(`Insert into user (user_first_name, user_last_name, user_email, user_password) values ($1, $2, $3, $4)`, userPayload.FirstName, userPayload.LastName, userPayload.Email, userPayload.Password)
+	result, err := s.serverDb.Db.Exec(`Insert into users (first_name, last_name, email, password) values ($1, $2, $3, $4)`, userPayload.FirstName, userPayload.LastName, userPayload.Email, userPayload.Password)
 	
 		if err != nil { 
 			return models.UserPayload{}, errors.New("An error occured while creating user")
@@ -46,7 +49,7 @@ func (s UserService) CreateUser(userPayload models.UserPayload) (models.UserPayl
 
 
 	createdUser := models.UserPayload{}
-	err = s.serverDb.Db.QueryRow("SELECT * FROM user WHERE user_email = $1", userPayload.Email).
+	err = s.serverDb.Db.QueryRow("SELECT * FROM users WHERE user_email = $1", userPayload.Email).
 	Scan(&createdUser.FirstName, &createdUser.LastName, &createdUser.Email, &createdUser.Password)
 		
 	if err != nil {

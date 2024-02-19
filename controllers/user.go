@@ -32,6 +32,7 @@ if err != nil {
 }
 createdUser, err := c.UserService.CreateUser(userPayload)
 if err != nil {
+	fmt.Println("err", err)
 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	return
 }
