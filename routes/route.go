@@ -1,22 +1,31 @@
 package routes
 
-// "net/http"
+import (
+	"e_real_estate/controllers"
+	"e_real_estate/db"
+	"e_real_estate/middleware"
+	"e_real_estate/services"
+	"fmt"
 
-// "github.com/gin-gonic/gin"
-
-// //create an instance of gin engine
-// var Router = gin.Default()
-
-// func InitializeRoutes () {
-// 	publicRoutes := Router.Group("v1/")
-// 	publicRoutes.GET("properties", Welcome)
-// }
-
-// func Welcome(context *gin.Context) {
-// 	context.JSON(http.StatusOK, gin.H{
-// 		"message": "API is up and working fine",
-// 	})
-// }
+	"github.com/gorilla/mux"
+)
 
 
-func main ()
+
+
+func Router() *mux.Router{
+	database, err := db.NewDb() 
+	if err != nil {
+		fmt.Println(err)
+	}
+	userService := services.NewUserService(database)
+	userController := controllers.NewUserController(userService)
+
+	 router := mux.NewRouter()
+
+	 router.HandleFunc("/", controllers.Test).Methods("GET")
+	 router.HandleFunc("/user", userController.CreateAccount).Methods("POST")
+	 router.HandleFunc("/dd", middleware.CreateStock).Methods("GET")
+
+	return router
+	}

@@ -6,17 +6,12 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 
-	"e_real_estate/controllers"
 	"e_real_estate/db"
-	"e_real_estate/services"
+	"e_real_estate/routes"
 )
-
-
-
 
 func main() {
 
@@ -28,39 +23,35 @@ func main() {
 	}
 
 	//database connection
-	 database := db.NewDb()
-	 err := database.Connect()
+	database, err := db.NewDb()
+	if err != nil {
+		fmt.Println(err)
+	}
+	database.Connect()
 
-	 defer database.Db.Close()
-	 err = database.Db.Ping()
-	 if err != nil { 
+	defer database.Db.Close()
+	err = database.Db.Ping()
+	if err != nil {
 		panic(err)
-	 }
-	 fmt.Println("we are connected to postgres")
-	 
+	}
+	fmt.Println("we are connected to postgres")
+
 	// multiplexer inspects URL request, redirects to correct handler
-	router := mux.NewRouter()
 
 	//handler
-
-	userService := services.NewUserService(database)
-	userController:= controllers.NewUserController(userService)
-
-	router.HandleFunc("/", controllers.Test).Methods("Get")
-	router.HandleFunc("/user", userController.CreateAccount).Methods("Post")
-
+	router := routes.Router()
 	handler := cors.Default().Handler(router)
 
 	server := &http.Server{
 		Handler: handler,
-		Addr: ":" + portString,
+		Addr:    ":" + portString,
 	}
 
 	server.Handler = router
 
 	log.Printf("Server starting on port %v", portString)
 	err = server.ListenAndServe()
-	if err != nil { 
+	if err != nil {
 		log.Fatal(err)
 	}
 
