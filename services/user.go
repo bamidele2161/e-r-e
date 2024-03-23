@@ -55,11 +55,13 @@ func (s UserService) CreateUser(userPayload models.UserPayload) (models.CreatedU
 		fmt.Println(err)
 		return models.CreatedUserResponse{}, errors.New("Error occured")
 	}
-	responseData := models.UserResponseData{}
-	responseData.Email = createdUser.Email
-	responseData.FirstName = createdUser.FirstName
-	responseData.LastName = createdUser.LastName
-	responseData.Id = createdUser.Id
+	responseData := models.UserResponseData{
+		Email: createdUser.Email,
+		FirstName : createdUser.FirstName,
+		LastName :createdUser.LastName,
+		Id :createdUser.Id,
+	}
+	
 
 	response := models.CreatedUserResponse{
 		Message: "User created successfully",
@@ -79,6 +81,48 @@ func (s UserService) CreateUser2(user models.UserPayload) error {
 func User(data models.UserPayload) (users models.UserPayload, err error) {
 	return 
 }
-func Login() (users []models.LoginPayload, err error) {
-	return 
+func (s UserService) Login(userPayload models.LoginPayload) (models.CreatedUserResponse, error){
+
+	row := s.serverDb.Db.QueryRow(`SELECT * FROM users WHERE email = $1`, userPayload.Email)
+	existingUser := models.UserPayload{}
+
+	err := row.Scan(
+		&existingUser.Id,
+		&existingUser.FirstName, 
+		&existingUser.LastName,
+		&existingUser.Email,
+		&existingUser.Password )
+
+	if err != nil {
+		return models.CreatedUserResponse{}, errors.New("User not found")
+	}
+
+	
+	//compare password
+	err = utils.ComparePassword(userPayload.Password, []byte(existingUser.Password))
+	if err != nil { 
+		return models.CreatedUserResponse{}, errors.New("Invalid credentials")
+	}
+
+	//generate token
+	token, err := utils.CreateToken(existingUser.Email)
+	if err != nil { 
+		fmt.Println(err)
+		return models.CreatedUserResponse{}, errors.New("Error occured")}
+
+		responseData := models.UserResponseData{
+			Email: existingUser.Email,
+			FirstName : existingUser.FirstName,
+			LastName :existingUser.LastName,
+			Id :existingUser.Id,
+		}
+		
+		//return user data to client
+		response := models.CreatedUserResponse{
+			Message: "Login successfully",
+			Token: token,
+			Data: responseData,
+			StatusCode: 200,
+		}
+	return response, nil
 }

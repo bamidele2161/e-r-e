@@ -26,8 +26,8 @@ type ErrorResponse struct {
 	StatusCode int `json:"statusCode"`
 }
 type LoginPayload struct {
-	email string
-	password string
+	Email string
+	Password string
 }
 type LoginResponse struct {
 	email string

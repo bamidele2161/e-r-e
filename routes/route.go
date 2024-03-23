@@ -26,6 +26,7 @@ func Router() *mux.Router{
 	 router.HandleFunc("/", controllers.Test).Methods("GET")
 	 router.HandleFunc("/user", userController.CreateAccount).Methods("POST")
 	 router.HandleFunc("/dd", middleware.CreateStock).Methods("GET")
+	 router.HandleFunc("/user/login", userController.Login).Methods("POST")
 
 	return router
 	}

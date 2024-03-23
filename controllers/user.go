@@ -61,11 +61,39 @@ func (c UserController) CreateAccount(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (c UserController) Login(w http.ResponseWriter, r *http.Request) {
+	//parse user body into userPayload
+	w.Header().Set("Content-Type", "application/json")
+	var loginPayload models.LoginPayload
+	err := json.NewDecoder(r.Body).Decode(&loginPayload)
+
+	if err != nil { 
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	//validate the payload
+	emailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
+
+	if !emailRegex.MatchString(loginPayload.Email) {
+		utils.RespondWithError(w, http.StatusBadRequest, "Please provide a valid email address")
+		return
+	} else if !utils.Validator(w, loginPayload.Password, "Password", 6){
+		return
+	}
+
+
+	LoginUser, err := c.UserService.Login(loginPayload)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	
+	json.NewEncoder(w).Encode(LoginUser)
+
+}
 
 func (h *MyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome")
 }
 
-func Login(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome")
-}

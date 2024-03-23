@@ -19,6 +19,14 @@ func HashPassword (password string, cost int) ([]byte, error) {
 	return hashedPassword, nil
 }
 
+func ComparePassword (password string, hashedPassword []byte) ( error) {
+	err := bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
+
+	if err != nil{
+		return err
+	}
+	return nil
+}
 func RespondWithError (w http.ResponseWriter, statusCode int, errMessage string)  {
 	response := models.ErrorResponse{
 		Error: errMessage,
@@ -41,14 +49,13 @@ func CreateToken (id string) (string, error) {
 	godotenv.Load(".env")
 	secretKey := os.Getenv("TOKEN_SECRET_KEY")
 
-	token := jwt.NewWithClaims(jwt.SigningMethodES256,
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 	jwt.MapClaims{
 		"id": id,
 		"exp": time.Now().Add(time.Hour *24).Unix(),
 	})
 
 	tokenKey := []byte(secretKey)
-
 	tokenString, err := token.SignedString(tokenKey)
 
 	if err != nil {
